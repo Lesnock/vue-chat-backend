@@ -2,10 +2,14 @@ module.exports = {
   development: {
     client: 'sqlite',
     connection: {
-      filename: './database.sqlite'
+      filename: './src/database/database.sqlite'
     },
     migrations: {
-      directory: './database/migrations'
-    }
+      directory: './src/database/migrations'
+    },
+    seeds: {
+      directory: './src/database/seeds'
+    },
+    useNullAsDefault: true
   }
 }
