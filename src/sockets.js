@@ -16,4 +16,8 @@ module.exports = function (io, socket) {
   socket.on('send-message', async message => {
     await Message.insert(message)
   })
+
+  socket.on('disconnect', () => {
+    console.log(socket.id)
+  })
 }
