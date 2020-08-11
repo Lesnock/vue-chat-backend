@@ -11,7 +11,6 @@ class MessagesController extends Controller {
       const messages = await db('messages')
         .where('sender_id', loggedUserId)
         .where('recipient_id', receiverId)
-        .orderBy('date', 'desc')
 
       return res.json(messages)
     } catch (error) {
