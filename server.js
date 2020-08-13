@@ -6,7 +6,7 @@ const cors = require('cors')
 const routes = require('./src/routes')
 const sockets = require('./src/sockets')
 
-app.use(cors())
+app.use(cors('*'))
 
 app.get('/', (req, res) => {
   console.log('Welcome Home')

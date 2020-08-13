@@ -19,7 +19,51 @@ class MessagesController extends Controller {
       console.log(error)
       return res.status(500).json({ error: error.message })
     }
+  }
 
+  async notViewedMessagesCount(req, res) {
+    const { userId } = req.params
+
+    try {
+      let messages = await db('messages')
+        .where('recipient_id', userId)
+        .where('viewed', false)
+
+      const notViewdMessages = {}
+
+      // Count messages for each user
+      messages.forEach(message => {
+        if (!notViewdMessages[message.sender_id]) {
+          notViewdMessages[message.sender_id] = 0
+        }
+
+        notViewdMessages[message.sender_id]++
+      })
+
+      return res.json(notViewdMessages)
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({ error: error.message })
+    }
+  }
+
+  // Mark all messages viewed from a specific sender and recipient
+  async markAsViewed(req, res) {
+    const { recipientId, senderId } = req.params
+
+    try {
+      await db('messages')
+        .where('sender_id', senderId)
+        .where('recipient_id', recipientId)
+        .update({ viewed: true })
+
+      res.send()
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({
+        error: error.message
+      })
+    }
   }
 }
 
