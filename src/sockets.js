@@ -4,7 +4,7 @@ const {
   isOnline,
   addConnection,
   removeConnection,
-  getSocketIdByUserId,
+  getSocketsByUserId,
   getConnections,
 } = require('./connections')
 
@@ -29,9 +29,11 @@ module.exports = function (io, socket) {
     await Message.insert(message)
 
     if (isOnline(message.recipient_id)) {
-      const receiverSocketId = getSocketIdByUserId(message.recipient_id)
+      const receiverSockets = getSocketsByUserId(message.recipient_id)
 
-      io.to(receiverSocketId).emit('receive-message', message)
+      receiverSockets.forEach(socketId => {
+        io.to(socketId).emit('receive-message', message)
+      })
     }
   })
 

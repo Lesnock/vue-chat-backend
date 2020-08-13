@@ -13,6 +13,7 @@ routes.post('/login', LoginController.authenticate)
 
 // Private Routes
 routes.use(authMiddleware)
+
 routes.get('/check-token', LoginController.checkToken)
 routes.get('/users', UsersController.index)
 routes.get('/users/:username', UsersController.show)
@@ -20,6 +21,6 @@ routes.get('/users/:username', UsersController.show)
 // Messages
 routes.get('/messages/:userId/not-viewed-messages-count', MessagesController.notViewedMessagesCount)
 routes.get('/messages/:recipientId/mark-as-viewed/:senderId', MessagesController.markAsViewed)
-routes.get('/messages/:loggedUserId/:receiverId', MessagesController.index)
+routes.get('/messages/:loggedUserId/:receiverId/:offset', MessagesController.index)
 
 module.exports = routes

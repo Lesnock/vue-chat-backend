@@ -9,14 +9,16 @@ module.exports = {
     return connections[socketId]
   },
 
-  getSocketIdByUserId(userId) {
+  getSocketsByUserId(userId) {
+    const sockets = []
+
     for (const socketId in connections) {
       if (connections[socketId] === userId) {
-        return socketId
+        sockets.push(socketId)
       }
     }
 
-    return undefined
+    return sockets
   },
 
   addConnection(socketId, userId) {

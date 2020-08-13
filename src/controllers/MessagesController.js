@@ -5,7 +5,7 @@ const db = require('../database')
 
 class MessagesController extends Controller {
   async index(req, res) {
-    const { loggedUserId, receiverId } = req.params
+    const { loggedUserId, receiverId, offset } = req.params
 
     try {
       const messages = await db('messages')
@@ -13,6 +13,8 @@ class MessagesController extends Controller {
           '(sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)',
           [loggedUserId, receiverId, receiverId, loggedUserId]
         )
+        .offset(offset)
+        .limit(20)
 
       return res.json(messages)
     } catch (error) {
