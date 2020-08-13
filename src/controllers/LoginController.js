@@ -1,7 +1,8 @@
-const Controller = require('./Controller')
+const jwt = require('jsonwebtoken')
 
-// Database
 const db = require('../database')
+const Controller = require('./Controller')
+const authConfig = require('../config/auth')
 
 class LoginController extends Controller {
   async authenticate(req, res) {
@@ -22,7 +23,24 @@ class LoginController extends Controller {
       })
     }
 
-    return res.status(200).json(user)
+    const token = jwt.sign(
+      { id: user.id },
+      authConfig.secret,
+      { expiresIn: authConfig.expiresIn }
+    )
+
+    return res.status(200).json({
+      user,
+      token
+    })
+  }
+
+  checkToken(req, res) {
+    // If request reach here, this means that the token is valid
+    // Because it passed through the auth middleware
+    return res.status(200).json({
+      message: 'Valid token'
+    })
   }
 }
 
