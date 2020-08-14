@@ -8,13 +8,17 @@ class MessagesController extends Controller {
     const { loggedUserId, receiverId, offset } = req.params
 
     try {
-      const messages = await db('messages')
-        .whereRaw(
-          '(sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)',
-          [loggedUserId, receiverId, receiverId, loggedUserId]
-        )
-        .offset(offset)
-        .limit(20)
+      // Get Messages ordered by date with 'reverse' LIMIT
+      const messages = await db.raw(`
+        SELECT * FROM (
+          SELECT * FROM messages
+          WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
+          ORDER BY date DESC
+          LIMIT 20
+          OFFSET ?
+        ) subquery
+        ORDER BY date ASC
+      `, [loggedUserId, receiverId, receiverId, loggedUserId, offset])
 
       return res.json(messages)
     } catch (error) {
