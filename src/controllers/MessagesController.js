@@ -14,7 +14,7 @@ class MessagesController extends Controller {
           SELECT * FROM messages
           WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
           ORDER BY date DESC
-          LIMIT 20
+          LIMIT 50
           OFFSET ?
         ) subquery
         ORDER BY date ASC
@@ -24,6 +24,24 @@ class MessagesController extends Controller {
     } catch (error) {
       console.log(error)
       return res.status(500).json({ error: error.message })
+    }
+  }
+
+  async count(req, res) {
+    const { senderId, recipientId } = req.params
+
+    try {
+      const count = await db.raw(`
+        SELECT COUNT(id) as count FROM messages
+        WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
+      `, [senderId, recipientId, recipientId, senderId])
+
+      return res.json({ count: count[0].count })
+    } catch (error) {
+      console.log(error)
+      return res.json({
+        error: error.message
+      })
     }
   }
 

@@ -19,6 +19,7 @@ routes.get('/users', UsersController.index)
 routes.get('/users/:username', UsersController.show)
 
 // Messages
+routes.get('/messages/count/:senderId/:recipientId', MessagesController.count)
 routes.get('/messages/:userId/not-viewed-messages-count', MessagesController.notViewedMessagesCount)
 routes.get('/messages/:recipientId/mark-as-viewed/:senderId', MessagesController.markAsViewed)
 routes.get('/messages/:loggedUserId/:receiverId/:offset', MessagesController.index)
