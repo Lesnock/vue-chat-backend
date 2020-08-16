@@ -1,7 +1,7 @@
 
 exports.up = function (knex) {
   return knex.schema.createTable('messages', table => {
-    table.increments('id')
+    table.string('uuid')
     table.integer('sender_id')
     table.integer('recipient_id')
     table.text('text')

@@ -5,20 +5,36 @@ const db = require('../database')
 
 class MessagesController extends Controller {
   async index(req, res) {
-    const { loggedUserId, receiverId, offset } = req.params
+    const { contact_id } = req.params
+
+    const { offset, limit } = req.query
 
     try {
-      // Get Messages ordered by date with 'reverse' LIMIT
-      const messages = await db.raw(`
-        SELECT * FROM (
-          SELECT * FROM messages
-          WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
-          ORDER BY date DESC
-          LIMIT 50
-          OFFSET ?
-        ) subquery
-        ORDER BY date ASC
-      `, [loggedUserId, receiverId, receiverId, loggedUserId, offset])
+      // Create subquery for get date asc, and after get date asc
+      const subquery = db('messages')
+        .where(function () {
+          this
+            .where('sender_id', req.userId)
+            .andWhere('recipient_id', contact_id)
+        })
+        .orWhere(function () {
+          this
+            .where('sender_id', contact_id)
+            .andWhere('recipient_id', req.userId)
+        })
+        .orderBy('date', 'desc')
+
+      if (offset) {
+        subquery.offset(offset)
+      }
+
+      if (limit) {
+        subquery.limit(limit)
+      } else {
+        subquery.limit(50)
+      }
+
+      const messages = await db.select('*').from(subquery).orderBy('date', 'asc')
 
       return res.json(messages)
     } catch (error) {
@@ -27,66 +43,118 @@ class MessagesController extends Controller {
     }
   }
 
-  async count(req, res) {
-    const { senderId, recipientId } = req.params
+  async update(req, res) {
+    const { uuid } = req.params
+
+    const message = await db('messages').where('uuid', uuid).first()
+
+    // Logged user can only mark his received messages
+    if (message.sender_id !== req.userId) {
+      return res.status(401).json({
+        error: 'Logged user cannot mark messages from other users'
+      })
+    }
+
+    const {
+      text,
+      viewed,
+      received
+    } = req.body
+
+    if (!text || !viewed || !received) {
+      return res.send()
+    }
 
     try {
-      const count = await db.raw(`
-        SELECT COUNT(id) as count FROM messages
-        WHERE (sender_id = ? AND recipient_id = ?) OR (sender_id = ? AND recipient_id = ?)
-      `, [senderId, recipientId, recipientId, senderId])
+      await db('messages')
+        .where('uuid', uuid)
+        .update({
+          text,
+          viewed,
+          received
+        })
+
+      return res.send()
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        error: error.message
+      })
+    }
+  }
+
+  async mark(req, res) {
+    const {
+      viewed,
+      received
+    } = req.body
+
+    const query = db('messages')
+
+    // Logged user is considered the recipient
+    query.where('recipient_id', req.userId)
+
+    const { sender_id } = req.query
+
+    if (sender_id) {
+      query.where('sender_id', sender_id)
+    }
+
+    try {
+      await query
+        .update({
+          viewed,
+          received
+        })
+
+      return res.send()
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        error: error.message
+      })
+    }
+  }
+
+  async count(req, res) {
+    const { contact_id } = req.params
+
+    try {
+      const count = await db
+        .count('uuid as count')
+        .from('messages')
+        .where(function () {
+          this
+            .where('sender_id', req.userId)
+            .andWhere('recipient_id', contact_id)
+        })
+        .orWhere(function () {
+          this
+            .where('sender_id', contact_id)
+            .andWhere('recipient_id', req.userId)
+        })
 
       return res.json({ count: count[0].count })
     } catch (error) {
-      console.log(error)
       return res.json({
         error: error.message
       })
     }
   }
 
-  async notViewedMessagesCount(req, res) {
-    const { userId } = req.params
-
+  async countNotViewedMessages(req, res) {
     try {
-      let messages = await db('messages')
-        .where('recipient_id', userId)
+      const count = await db('messages')
+        .select('sender_id')
+        .count('uuid as count')
+        .where('recipient_id', req.userId) // Logged User is the recipient user
         .where('viewed', false)
+        .groupBy('sender_id')
 
-      const notViewdMessages = {}
-
-      // Count messages for each user
-      messages.forEach(message => {
-        if (!notViewdMessages[message.sender_id]) {
-          notViewdMessages[message.sender_id] = 0
-        }
-
-        notViewdMessages[message.sender_id]++
-      })
-
-      return res.json(notViewdMessages)
+      return res.json(count)
     } catch (error) {
       console.log(error)
       return res.status(500).json({ error: error.message })
-    }
-  }
-
-  // Mark all messages viewed from a specific sender and recipient
-  async markAsViewed(req, res) {
-    const { recipientId, senderId } = req.params
-
-    try {
-      await db('messages')
-        .where('sender_id', senderId)
-        .where('recipient_id', recipientId)
-        .update({ viewed: true })
-
-      res.send()
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({
-        error: error.message
-      })
     }
   }
 }
