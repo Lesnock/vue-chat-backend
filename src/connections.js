@@ -13,7 +13,7 @@ module.exports = {
     const sockets = []
 
     for (const socketId in connections) {
-      if (connections[socketId] === userId) {
+      if (connections[socketId] === Number(userId)) {
         sockets.push(socketId)
       }
     }

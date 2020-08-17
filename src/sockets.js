@@ -6,14 +6,26 @@ const {
   addConnection,
   removeConnection,
   getSocketsByUserId,
+  getConnection,
+  getConnections,
 } = require('./connections')
 
 module.exports = function (io, socket) {
+
   // Indentify user
-  socket.on('user-id', userId => {
+  socket.on('user-id', async userId => {
     addConnection(socket.id, userId)
 
     Message.markAllMessagesAsReceived(userId)
+
+    // Notify others users
+    for (const socketId in getConnections()) {
+      if (socketId === socket.id) {
+        continue;
+      }
+
+      io.to(socketId).emit('new-user-online', userId)
+    }
   })
 
   // Get User
@@ -41,9 +53,20 @@ module.exports = function (io, socket) {
 
       // Mark this message as received in db
       Message.markMessageAsReceived(message.uuid)
+
+      socket.emit('message-delivered', message.uuid)
     }
 
     await Message.insert(message)
+  })
+
+  socket.on('user-viewed-messages', sender_id => {
+    const sockets = getSocketsByUserId(sender_id)
+    const recipient_id = getConnection(socket.id)
+
+    sockets.forEach(socketId => {
+      io.to(socketId).emit('user-viewed-messages', recipient_id)
+    })
   })
 
   socket.on('disconnect', () => {

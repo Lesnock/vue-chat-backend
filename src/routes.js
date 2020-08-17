@@ -19,10 +19,10 @@ routes.get('/users', UsersController.index)
 routes.get('/users/:username', UsersController.show)
 
 // Messages
-routes.get('/messages/:contact_id', MessagesController.index)
-routes.get('/messages/count/:contact_id', MessagesController.count)
 routes.get('/messages/count-not-viewed-messages', MessagesController.countNotViewedMessages)
-routes.put('/messages/:uuid', MessagesController.update)
 routes.patch('/messages/mark', MessagesController.mark)
+routes.get('/messages/count/:contact_id', MessagesController.count)
+routes.get('/messages/:contact_id', MessagesController.index)
+routes.put('/messages/:uuid', MessagesController.update)
 
 module.exports = routes

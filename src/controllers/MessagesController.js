@@ -49,7 +49,7 @@ class MessagesController extends Controller {
     const message = await db('messages').where('uuid', uuid).first()
 
     // Logged user can only mark his received messages
-    if (message.sender_id !== req.userId) {
+    if (message.recipient_id !== req.userId) {
       return res.status(401).json({
         error: 'Logged user cannot mark messages from other users'
       })
@@ -61,12 +61,12 @@ class MessagesController extends Controller {
       received
     } = req.body
 
-    if (!text || !viewed || !received) {
+    if (!text & !viewed & !received) {
       return res.send()
     }
 
     try {
-      await db('messages')
+      const mess = await db('messages')
         .where('uuid', uuid)
         .update({
           text,
@@ -151,7 +151,13 @@ class MessagesController extends Controller {
         .where('viewed', false)
         .groupBy('sender_id')
 
-      return res.json(count)
+
+      const reorganized = {} // Reorganize to { sender_id: count }
+      count.forEach(({ sender_id, count }) => {
+        reorganized[sender_id] = count
+      })
+
+      return res.json(reorganized)
     } catch (error) {
       console.log(error)
       return res.status(500).json({ error: error.message })
