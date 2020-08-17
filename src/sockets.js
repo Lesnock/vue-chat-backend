@@ -73,6 +73,26 @@ module.exports = function (io, socket) {
     })
   })
 
+  socket.on('typing', ({ from, to }) => {
+    if (isOnline(to)) {
+      const sockets = getSocketsByUserId(to)
+
+      sockets.map(socketId => {
+        io.to(socketId).emit('contact-is-typing', from)
+      })
+    }
+  })
+
+  socket.on('stopped-typing', ({ from, to }) => {
+    if (isOnline(to)) {
+      const sockets = getSocketsByUserId(to)
+
+      sockets.map(socketId => {
+        io.to(socketId).emit('contact-stopped-typing', from)
+      })
+    }
+  })
+
   socket.on('disconnect', () => {
     removeConnection(socket.id)
 
