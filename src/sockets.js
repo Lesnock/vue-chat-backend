@@ -28,6 +28,10 @@ module.exports = function (io, socket) {
     }
   })
 
+  socket.on('get-online-users', () => {
+    socket.emit('online-users', getConnections())
+  })
+
   // Get User
   socket.on('get-user-by-username', async username => {
     const user = User.getByUsername(username)
@@ -71,9 +75,21 @@ module.exports = function (io, socket) {
 
   socket.on('disconnect', () => {
     removeConnection(socket.id)
+
+    // Notify others users
+    for (const socketId in getConnections()) {
+      const userId = getConnection(socketId)
+      io.to(socketId).emit('user-disconnected', userId)
+    }
   })
 
   socket.on('logout', () => {
+    const userId = getConnection(socket.id)
     removeConnection(socket.id)
+
+    // Notify others users
+    for (const socketId in getConnections()) {
+      io.to(socketId).emit('user-disconnected', userId)
+    }
   })
 }

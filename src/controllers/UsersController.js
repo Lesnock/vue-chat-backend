@@ -7,6 +7,7 @@ class UsersController extends Controller {
   async index(req, res) {
     try {
       const users = await db('users')
+
       return res.json(users)
     } catch (error) {
       return res.status(500).json({ error: error.message })
