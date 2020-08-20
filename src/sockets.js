@@ -94,11 +94,11 @@ module.exports = function (io, socket) {
   })
 
   socket.on('disconnect', () => {
+    const userId = getConnection(socket.id)
     removeConnection(socket.id)
 
     // Notify others users
     for (const socketId in getConnections()) {
-      const userId = getConnection(socketId)
       io.to(socketId).emit('user-disconnected', userId)
     }
   })

@@ -18,6 +18,7 @@ app.use(routes)
 
 // Websocket
 io.on('connection', socket => {
+  console.log('Connected - ', socket.id)
   sockets(io, socket)
 })
 

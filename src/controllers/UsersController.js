@@ -6,7 +6,7 @@ const db = require('../database')
 class UsersController extends Controller {
   async index(req, res) {
     try {
-      const users = await db('users')
+      const users = await db('users').orderBy('name', 'asc')
 
       return res.json(users)
     } catch (error) {
